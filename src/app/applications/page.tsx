@@ -1,8 +1,8 @@
 import { Header } from "@/components/Header";
-import { Board } from "@/components/Board";
+import { ApplicationsTable } from "@/components/ApplicationsTable";
 import { getApplications } from "@/lib/actions/applications";
 
-export default async function HomePage() {
+export default async function ApplicationsListPage() {
   const applications = await getApplications();
 
   return (
@@ -10,9 +10,9 @@ export default async function HomePage() {
       <Header />
       <main className="mx-auto max-w-7xl px-4 py-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
-          Application Board
+          Applications List
         </h1>
-        <Board applications={applications} />
+        <ApplicationsTable applications={applications} />
       </main>
     </div>
   );

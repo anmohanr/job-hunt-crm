@@ -1,18 +1,15 @@
 import { Header } from "@/components/Header";
-import { Board } from "@/components/Board";
-import { getApplications } from "@/lib/actions/applications";
+import { ApplicationForm } from "@/components/ApplicationForm";
 
-export default async function HomePage() {
-  const applications = await getApplications();
-
+export default function NewApplicationPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
       <main className="mx-auto max-w-7xl px-4 py-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
-          Application Board
+          Add New Application
         </h1>
-        <Board applications={applications} />
+        <ApplicationForm />
       </main>
     </div>
   );
