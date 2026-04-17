@@ -1,6 +1,32 @@
 import type { ThreadMessage } from "@assistant-ui/react";
+import type { UIMessage } from "ai";
 import type { AssistantStream } from "assistant-stream";
 import { createAssistantStream } from "assistant-stream";
+
+// Module-level cache: threadId (remoteId) → UIMessage[]
+const messagesCache = new Map<string, UIMessage[]>();
+
+export function getCachedMessages(threadId: string): UIMessage[] {
+  return messagesCache.get(threadId) ?? [];
+}
+
+type DbMessage = { id: string; role: string; content: string };
+
+function convertToUIMessages(dbMessages: DbMessage[]): UIMessage[] {
+  return dbMessages.map((m) => {
+    try {
+      const parsed = JSON.parse(m.content);
+      if (parsed && typeof parsed === "object" && "parts" in parsed) {
+        return parsed as UIMessage;
+      }
+    } catch {}
+    return {
+      id: m.id,
+      role: m.role as "user" | "assistant",
+      parts: [{ type: "text" as const, text: m.content }],
+    };
+  });
+}
 
 type RemoteThreadInitializeResponse = {
   remoteId: string;
@@ -57,6 +83,11 @@ export class DbThreadListAdapter implements RemoteThreadListAdapter {
     const res = await fetch(`/api/threads/${threadId}`);
     if (!res.ok) throw new Error("Thread not found");
     const data = await res.json();
+
+    if (data.thread.messages?.length) {
+      messagesCache.set(data.thread.id, convertToUIMessages(data.thread.messages));
+    }
+
     return {
       remoteId: data.thread.id,
       title: data.thread.title ?? undefined,

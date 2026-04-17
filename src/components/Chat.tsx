@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useAuiState } from "@assistant-ui/react";
 import { Bot, Plus } from "lucide-react";
 import {
   AssistantRuntimeProvider,
@@ -10,13 +11,15 @@ import { Thread, ThreadList, makeMarkdownText } from "@assistant-ui/react-ui";
 
 const MarkdownText = makeMarkdownText();
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
-import { DbThreadListAdapter } from "@/lib/chatAdapter";
+import { DbThreadListAdapter, getCachedMessages } from "@/lib/chatAdapter";
 import { ToolCallDisplay } from "./ToolCallDisplay";
 import "@assistant-ui/react-ui/styles/index.css";
 import "@assistant-ui/react-ui/styles/markdown.css";
 
 function useChatRuntimeHook() {
-  return useChatRuntime();
+  const threadId = useAuiState(({ threadListItem }) => threadListItem.id);
+  const messages = useMemo(() => getCachedMessages(threadId), [threadId]);
+  return useChatRuntime({ messages });
 }
 
 export function Chat() {

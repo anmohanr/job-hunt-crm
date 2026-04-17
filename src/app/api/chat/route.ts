@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   }
 
   const openai = createOpenAI({ apiKey: settings.openaiApiKey });
-  const { messages } = await request.json();
+  const { messages, id: threadId } = await request.json();
 
   const result = streamText({
     model: openai("gpt-4o"),
@@ -291,6 +291,32 @@ Formatting rules (follow these strictly):
       }),
     },
     stopWhen: stepCountIs(10),
+    onFinish: async ({ text }) => {
+      if (!threadId) return;
+      const thread = await prisma.thread.findUnique({
+        where: { id: threadId, userId },
+      });
+      if (!thread) return;
+
+      const userMsg = messages[messages.length - 1];
+      if (userMsg?.role === "user") {
+        await prisma.message.create({
+          data: { threadId, role: "user", content: JSON.stringify(userMsg) },
+        });
+      }
+
+      await prisma.message.create({
+        data: {
+          threadId,
+          role: "assistant",
+          content: JSON.stringify({
+            id: crypto.randomUUID(),
+            role: "assistant",
+            parts: [{ type: "text", text }],
+          }),
+        },
+      });
+    },
   });
 
   return result.toUIMessageStreamResponse();
